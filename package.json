@@ -1,7 +1,7 @@
 {
   "name": "user-tint",
   "displayName": "User Tint",
-  "description": "Lightweight Peacock-alternative: title bar colors from user-owned path rules + optional hash; optional workspace overrides. Smaller scope than Peacock; different tradeoff than Kingfisher.",
+  "description": "Per-workspace title bar (and optional activity bar) colors from user-owned rules, optional stable hash fallback, and optional workspace overrides. Works in VS Code and Cursor.",
   "version": "1.0.0",
   "publisher": "paulphan",
   "license": "MIT",
