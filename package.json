@@ -2,8 +2,9 @@
   "name": "user-tint",
   "displayName": "User Tint",
   "description": "Per-workspace title bar (and optional activity bar) colors from user-owned rules, optional stable hash fallback, and optional workspace overrides. Works in VS Code and Cursor.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "ImpactSix",
+  "icon": "icon.png",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -55,7 +56,11 @@
           "default": [],
           "items": {
             "type": "object",
-            "required": ["match", "pattern", "colors"],
+            "required": [
+              "match",
+              "pattern",
+              "colors"
+            ],
             "properties": {
               "match": {
                 "type": "string",
@@ -135,10 +140,18 @@
           "type": "object",
           "default": {},
           "properties": {
-            "titleBarActiveBackground": { "type": "string" },
-            "titleBarActiveForeground": { "type": "string" },
-            "activityBarBackground": { "type": "string" },
-            "activityBarForeground": { "type": "string" }
+            "titleBarActiveBackground": {
+              "type": "string"
+            },
+            "titleBarActiveForeground": {
+              "type": "string"
+            },
+            "activityBarBackground": {
+              "type": "string"
+            },
+            "activityBarForeground": {
+              "type": "string"
+            }
           },
           "additionalProperties": false,
           "markdownDescription": "Workspace-only overrides. Used only when **User Tint › Allow Workspace Override** is enabled.",
