@@ -1,0 +1,163 @@
+{
+  "name": "user-tint",
+  "displayName": "User Tint",
+  "description": "Lightweight Peacock-alternative: title bar colors from user-owned path rules + optional hash; optional workspace overrides. Smaller scope than Peacock; different tradeoff than Kingfisher.",
+  "version": "1.0.0",
+  "publisher": "paulphan",
+  "license": "MIT",
+  "keywords": [
+    "theme",
+    "title bar",
+    "workbench",
+    "color",
+    "peacock",
+    "multi-root",
+    "workspace"
+  ],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "userTint.apply",
+        "title": "User Tint: Apply theme"
+      },
+      {
+        "command": "userTint.setColorForWorkspace",
+        "title": "User Tint: Set color for this workspace…"
+      },
+      {
+        "command": "userTint.reset",
+        "title": "User Tint: Reset workspace tint"
+      }
+    ],
+    "configuration": {
+      "title": "User Tint",
+      "properties": {
+        "userTint.rules": {
+          "type": "array",
+          "markdownDescription": "First matching rule wins. Resolved colors are written to **workspace** `workbench.colorCustomizations` (see README). Your **rules** stay in user settings.",
+          "default": [],
+          "items": {
+            "type": "object",
+            "required": ["match", "pattern", "colors"],
+            "properties": {
+              "match": {
+                "type": "string",
+                "enum": [
+                  "basename",
+                  "pathPrefix",
+                  "pathContains",
+                  "workspaceFilePath",
+                  "workspaceFileBasename"
+                ],
+                "description": "What to match against the current workspace."
+              },
+              "pattern": {
+                "type": "string",
+                "description": "Compared per match kind (e.g. folder basename, path prefix)."
+              },
+              "colors": {
+                "type": "object",
+                "properties": {
+                  "titleBarActiveBackground": {
+                    "type": "string",
+                    "description": "CSS color (e.g. #1e3a5f)"
+                  },
+                  "titleBarActiveForeground": {
+                    "type": "string",
+                    "description": "Optional; chosen automatically if omitted when a background is set."
+                  },
+                  "activityBarBackground": {
+                    "type": "string"
+                  },
+                  "activityBarForeground": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "scope": "application"
+        },
+        "userTint.hashFallback": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "If no rule matches, derive a stable HSL background from the workspace identity (path or workspace file).",
+          "scope": "application"
+        },
+        "userTint.hashSaturation": {
+          "type": "number",
+          "default": 42,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Saturation % for hash fallback.",
+          "scope": "application"
+        },
+        "userTint.hashLightness": {
+          "type": "number",
+          "default": 32,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Lightness % for hash fallback.",
+          "scope": "application"
+        },
+        "userTint.applyActivityBar": {
+          "type": "boolean",
+          "default": false,
+          "description": "Also set activity bar colors when a rule or hash supplies them.",
+          "scope": "application"
+        },
+        "userTint.allowWorkspaceOverride": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "When true, `userTint.workspaceColors` from **workspace** settings is merged on top of your user rules (optional team styling in the repo).",
+          "scope": "application"
+        },
+        "userTint.workspaceColors": {
+          "type": "object",
+          "default": {},
+          "properties": {
+            "titleBarActiveBackground": { "type": "string" },
+            "titleBarActiveForeground": { "type": "string" },
+            "activityBarBackground": { "type": "string" },
+            "activityBarForeground": { "type": "string" }
+          },
+          "additionalProperties": false,
+          "markdownDescription": "Workspace-only overrides. Used only when **User Tint › Allow Workspace Override** is enabled.",
+          "scope": "window"
+        },
+        "userTint.autoApply": {
+          "type": "boolean",
+          "default": true,
+          "description": "Apply tint on startup and when workspace folders or User Tint settings change.",
+          "scope": "application"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package --no-dependencies",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.2.2",
+    "typescript": "^5.4.0",
+    "vitest": "^2.1.0"
+  }
+}
