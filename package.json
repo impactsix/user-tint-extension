@@ -5,6 +5,13 @@
   "version": "1.0.0",
   "publisher": "ImpactSix",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/impactsix/user-tint-extension.git"
+  },
+  "bugs": {
+    "url": "https://github.com/impactsix/user-tint-extension/issues"
+  },
   "keywords": [
     "theme",
     "title bar",
