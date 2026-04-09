@@ -8,16 +8,18 @@ Works in **Visual Studio Code** and **Cursor**.
 
 ## Why this exists (and what makes it different)
 
-**The problem:** I run a lot of folders and workspaces at once. The editor chrome looks the same in every window, so I kept asking *which window is this?* before clicking or pasting somewhere wrong. I wanted a **simple, glanceable** signal tied to *where* I am, not a whole new theme.
+**The problem:** On team or client repos, **`.vscode/` is often in git**. A lot of extensions that “configure this workspace” save **workspace-scoped** settings into `.vscode/settings.json` (or your `.code-workspace` file). That is normal VS Code behavior, not something those extensions invented, but it means **personal UI choices** (like title bar colors) can show up as **shared diffs**, or you end up choosing between **git noise** and **asking everyone** to accept your tint. You usually **cannot** treat `.vscode` as “only mine” on a repo the whole team uses.
+
+On top of that, I run many folders and workspaces at once: same-looking chrome everywhere made me ask *which window is this?* before clicking or pasting in the wrong place. I wanted a **simple, glanceable** signal tied to *where* I am, not a whole new theme.
 
 **What User Tint does differently:**
 
-- **Your rules live in user settings** (`userTint.rules`, etc.), so they follow you via Settings Sync and are not something every repo has to adopt. You are not asking a team to commit tint colors just so you can navigate locally.
-- **Applied colors go to the workspace layer** because that is how VS Code exposes title bar colors. The README below explains how to keep those writes out of a git-tracked folder if you want to.
+- **Your rules live in user settings** (`userTint.rules`, etc.), so they follow you via Settings Sync and are **not** something every repo has to adopt. Matchers and toggles are yours; you are not forcing teammates to use your colors just to work in the tree.
+- **Applied colors still go to the workspace layer** because that is the only supported way VS Code applies title bar colors. The README below explains how to keep those writes **out of a git-tracked clone** (for example a user-local `.code-workspace` that points at the repo) when you want zero footprint in the client’s `.vscode`.
 - **Matchers you actually use** – basename, path prefix, workspace file path, and similar – plus an optional **hash fallback** for “always give me a stable color even when I did not write a rule yet.”
 - **Optional workspace overrides** exist if you *do* want shared colors in the repo; they are off unless you allow them.
 
-Other extensions and workflows often push you toward **only** workspace-committed `workbench.colorCustomizations` or **only** global themes. User Tint splits **policy** (your matchers in user settings) from **where the editor stores the resolved colors** (workspace), and documents the tradeoff up front.
+**About “other extensions”:** Not every extension touches `.vscode`; many only use **user** settings or internal storage. But extensions that persist **workspace** settings for a folder almost always land in **`.vscode/settings.json`** when that is where the workspace lives, which is why tint-style tools commonly conflict with **shared, committed** editor config. User Tint keeps **policy** in **user** settings and documents how **resolved colors** (workspace) can stay off the repo when you need that.
 
 ## Features
 
