@@ -4,6 +4,8 @@ Give each workspace a **distinct title bar** (and optionally the **activity bar*
 
 Works in **Visual Studio Code** and **Cursor**.
 
+Release notes: [`CHANGELOG.md`](CHANGELOG.md).
+
 ![Window with a custom title bar color applied](media/title-bar-example.png)
 
 ## Why this exists (and what makes it different)
@@ -27,6 +29,7 @@ On top of that, I run many folders and workspaces at once: same-looking chrome e
 - **Optional hash fallback** – Stable automatic color when no rule matches.
 - **Quick setup command** – Pick how to match the workspace and enter a hex color.
 - **Optional team colors** – Workspace-level overrides when you explicitly allow them.
+- **Workspace write mode** – Prefer applying only when a `.code-workspace` file is open, or disable workspace writes entirely, so you can keep tint colors out of a repo’s `.vscode/settings.json` (see **User Tint › Workspace Write Mode**).
 - **Reset** – Restore prior title/activity bar colors when possible.
 
 ## Install
@@ -46,9 +49,9 @@ Then: **Extensions** → **…** → **Install from VSIX…** and choose `user-t
 Or via CLI:
 
 ```bash
-code --install-extension ./user-tint-1.0.0.vsix
+code --install-extension ./user-tint-<version>.vsix
 # or
-cursor --install-extension ./user-tint-1.0.0.vsix
+cursor --install-extension ./user-tint-<version>.vsix
 ```
 
 ## Quick start
@@ -70,6 +73,7 @@ cursor --install-extension ./user-tint-1.0.0.vsix
 
 - Turn on **User Tint › Hash Fallback** for an automatic stable color per workspace.
 - Add **User Tint › Rules** in user settings (see example below).
+- Set **User Tint › Workspace Write Mode** to **`workspaceFileOnly`** when you open repos via a user-local `.code-workspace` file and want to avoid writes under the clone’s `.vscode/` (see [Keeping writes out of the repo](#keeping-color-writes-out-of-the-repo)).
 - Run **User Tint: Apply theme** after changing rules, or rely on **User Tint › Auto Apply** (on by default).
 
 ## How it works (and one limitation)
@@ -79,7 +83,7 @@ The editor only applies colors through `workbench.colorCustomizations`. This ext
 - **Rules and toggles** (`userTint.*`) stay in **user** settings and are not tied to git.
 - **The applied colors** are stored with the workspace so each window can look different.
 
-To avoid committing tint colors, open the project through a **user-local** `.code-workspace` file that lives outside the repo (see [Keeping writes out of the repo](#keeping-color-writes-out-of-the-repo)).
+To avoid committing tint colors, open the project through a **user-local** `.code-workspace` file that lives outside the repo (see [Keeping writes out of the repo](#keeping-color-writes-out-of-the-repo)), and consider **`workspaceFileOnly`** so User Tint does not apply (or warn) when you accidentally open the folder directly.
 
 ## Example `settings.json` (User)
 
@@ -155,6 +159,7 @@ Overrides merge on top of your user rules for that workspace.
 npm install
 npm run compile   # or npm run watch
 npm test          # Vitest (resolution logic)
+npm run verify-changelog
 ```
 
 **Run the extension:** open this repo in VS Code or Cursor → **Run and Debug** → **Run Extension** (F5).
