@@ -178,10 +178,11 @@
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run compile && npm run verify-changelog",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "package": "vsce package --no-dependencies",
+    "verify-changelog": "node scripts/verify-changelog.mjs",
     "test": "vitest run"
   },
   "devDependencies": {

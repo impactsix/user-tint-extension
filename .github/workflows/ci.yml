@@ -26,3 +26,5 @@ jobs:
       - run: npm run compile
 
       - run: npm test
+
+      - run: npm run verify-changelog

@@ -50,6 +50,9 @@ jobs:
 
       - run: npm test
 
+      - name: Verify CHANGELOG for release version
+        run: npm run verify-changelog
+
       - name: Package VSIX
         env:
           VERSION: ${{ steps.ver.outputs.version }}

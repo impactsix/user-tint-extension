@@ -169,13 +169,16 @@ Targets the [Visual Studio Marketplace](https://marketplace.visualstudio.com/) (
 npx @vscode/vsce login <your-publisher-id>
 ```
 
-**Each release:** Bump `"version"` in `package.json`, ensure `"publisher"` matches your marketplace id, then:
+**Each release:** Bump `"version"` in `package.json`, add a **`## [x.y.z]`** section to **`CHANGELOG.md`** (required), ensure `"publisher"` matches your marketplace id, then:
 
 ```bash
 npm test
 npm run compile
+npm run verify-changelog
 npx @vscode/vsce publish --no-dependencies
 ```
+
+`vscode:prepublish` runs `verify-changelog`, so packaging also fails if the changelog does not document the current version. CI and the release workflow run the same check.
 
 **Package only (no upload):** `npx @vscode/vsce package --no-dependencies` produces `user-tint-<version>.vsix`.
 
