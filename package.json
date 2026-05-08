@@ -162,6 +162,17 @@
           "default": true,
           "description": "Apply tint on startup and when workspace folders or User Tint settings change.",
           "scope": "application"
+        },
+        "userTint.workspaceWriteMode": {
+          "type": "string",
+          "enum": [
+            "workspace",
+            "workspaceFileOnly",
+            "never"
+          ],
+          "default": "workspace",
+          "markdownDescription": "Controls when User Tint writes resolved colors to **workspace** `workbench.colorCustomizations`. `workspace` applies for both folder workspaces and `.code-workspace` files (may write to `.vscode/settings.json` for folder workspaces). `workspaceFileOnly` applies only when a `.code-workspace` file is open (avoids `.vscode/settings.json` writes). `never` never writes workspace colors (rules can still be managed in user settings).",
+          "scope": "application"
         }
       }
     }

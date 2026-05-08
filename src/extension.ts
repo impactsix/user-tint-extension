@@ -14,6 +14,7 @@ import {
 } from './resolveWorkspaceTheme';
 
 const SNAPSHOT_KEY = 'userTint.managedColorSnapshot';
+const WRITE_BLOCK_NOTICE_KEY = 'userTint.writeBlockedNoticeShown';
 const CFG = 'userTint';
 
 function buildIdentity(): WorkspaceIdentity {
@@ -37,6 +38,10 @@ function readUserTintConfig(): UserTintConfig {
     hashLightness: cfg.get<number>('hashLightness', 32),
     applyActivityBar: cfg.get<boolean>('applyActivityBar', false),
     allowWorkspaceOverride: cfg.get<boolean>('allowWorkspaceOverride', false),
+    workspaceWriteMode: cfg.get<'workspace' | 'workspaceFileOnly' | 'never'>(
+      'workspaceWriteMode',
+      'workspace',
+    ),
   };
 }
 
@@ -120,6 +125,24 @@ export async function applyUserTint(
 
   const identity = buildIdentity();
   const user = readUserTintConfig();
+
+  if (
+    user.workspaceWriteMode !== 'workspace' &&
+    !vscode.workspace.workspaceFile
+  ) {
+    if (!context.workspaceState.get<boolean>(WRITE_BLOCK_NOTICE_KEY, false)) {
+      await context.workspaceState.update(WRITE_BLOCK_NOTICE_KEY, true);
+      const modeLabel =
+        user.workspaceWriteMode === 'workspaceFileOnly'
+          ? 'Workspace File Only'
+          : 'Never';
+      vscode.window.showWarningMessage(
+        `User Tint: not applying because this window is a folder workspace and "Workspace Write Mode" is set to "${modeLabel}". Open a user-local .code-workspace file (outside the repo) that points at this folder to keep writes out of .vscode/settings.json.`,
+      );
+    }
+    return;
+  }
+
   const workspaceOverride = readWorkspaceColorsOverride();
   const resolved = resolveWorkspaceTheme(identity, user, workspaceOverride);
 

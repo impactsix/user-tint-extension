@@ -25,6 +25,7 @@ export interface UserTintConfig {
   hashLightness: number;
   applyActivityBar: boolean;
   allowWorkspaceOverride: boolean;
+  workspaceWriteMode: 'workspace' | 'workspaceFileOnly' | 'never';
 }
 
 export interface WorkspaceColorsConfig {
