@@ -4,6 +4,12 @@ All notable changes to this project are documented here.
 
 The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.7] - 2026-07-08
+
+### Fixed
+
+- Regenerate `package-lock.json` against the public npm registry (lockfile previously pointed at an internal corporate registry, breaking CI and release publish).
+
 ## [1.0.6] - 2026-07-08
 
 ### Fixed
