@@ -47,8 +47,11 @@ jobs:
         run: |
           rm -rf node_modules
           npm install --no-fund --no-audit
-          node -e "require('typescript'); require('@types/vscode'); require('@types/node')"
-          npm run compile
+          test -d node_modules/typescript
+          test -d node_modules/@types/vscode
+          test -d node_modules/@types/node
+
+      - run: npm run compile
 
       - run: npm test
 
