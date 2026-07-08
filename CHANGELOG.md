@@ -4,6 +4,18 @@ All notable changes to this project are documented here.
 
 The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.4] - 2026-07-08
+
+### Fixed
+
+- Release workflow: retry `npm ci` and verify dependencies before compile/publish (fixes failed automated deploy for v1.0.3).
+- Release workflow: fail with a clear message when `VSCE_PAT` is missing.
+
+### Changed
+
+- README: link CHANGELOG and expand workspace write mode documentation.
+- CI and prepublish: enforce CHANGELOG entry for the current package version.
+
 ## [1.0.3] - 2026-05-08
 
 ### Added

@@ -44,7 +44,18 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           npm version "$VERSION" --no-git-tag-version --allow-same-version
 
-      - run: npm ci
+      - name: Install dependencies
+        run: |
+          for attempt in 1 2 3; do
+            if npm ci; then
+              break
+            fi
+            echo "npm ci failed (attempt ${attempt}/3), retrying..."
+            sleep 5
+          done
+          test -d node_modules/typescript
+          test -d node_modules/@types/vscode
+          test -d node_modules/@types/node
 
       - run: npm run compile
 
@@ -64,6 +75,10 @@ jobs:
           VERSION: ${{ steps.ver.outputs.version }}
           PRERELEASE: ${{ github.event.release.prerelease }}
         run: |
+          if [ -z "$VSCE_PAT" ]; then
+            echo "::error::VSCE_PAT repository secret is not set. Create an Azure DevOps PAT with Marketplace (Manage) scope and add it as a GitHub Actions secret."
+            exit 1
+          fi
           if [ "$PRERELEASE" = "true" ]; then
             npx @vscode/vsce publish --no-dependencies --packagePath "./user-tint-${VERSION}.vsix" --pre-release
           else
