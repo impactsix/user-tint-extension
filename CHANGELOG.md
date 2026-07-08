@@ -4,6 +4,12 @@ All notable changes to this project are documented here.
 
 The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.5] - 2026-07-08
+
+### Fixed
+
+- Release workflow: disable npm cache and require successful `require()` checks after `npm ci` (npm can exit 0 while install is broken on CI).
+
 ## [1.0.4] - 2026-07-08
 
 ### Fixed
@@ -15,6 +21,8 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0
 
 - README: link CHANGELOG and expand workspace write mode documentation.
 - CI and prepublish: enforce CHANGELOG entry for the current package version.
+
+_Note: v1.0.4 automated publish did not complete; use v1.0.5._
 
 ## [1.0.3] - 2026-05-08
 

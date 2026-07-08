@@ -33,7 +33,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: npm
 
       - name: Sync package version to tag
         id: ver
@@ -46,16 +45,19 @@ jobs:
 
       - name: Install dependencies
         run: |
+          rm -rf node_modules
           for attempt in 1 2 3; do
-            if npm ci; then
-              break
+            if npm ci --no-fund --no-audit; then
+              if node -e "require('typescript'); require('@types/vscode'); require('@types/node')"; then
+                exit 0
+              fi
             fi
-            echo "npm ci failed (attempt ${attempt}/3), retrying..."
+            echo "npm ci incomplete (attempt ${attempt}/3), retrying..."
+            rm -rf node_modules
             sleep 5
           done
-          test -d node_modules/typescript
-          test -d node_modules/@types/vscode
-          test -d node_modules/@types/node
+          echo "::error::Failed to install dependencies after 3 attempts"
+          exit 1
 
       - run: npm run compile
 
