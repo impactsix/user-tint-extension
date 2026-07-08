@@ -18,10 +18,13 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: npm
+          node-version: '24'
 
-      - run: npm ci
+      - name: Install dependencies
+        run: |
+          rm -rf node_modules
+          npm install --no-fund --no-audit
+          node -e "require('typescript'); require('@types/vscode'); require('@types/node')"
 
       - run: npm run compile
 

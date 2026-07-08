@@ -32,7 +32,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Sync package version to tag
         id: ver
@@ -46,20 +46,9 @@ jobs:
       - name: Install dependencies
         run: |
           rm -rf node_modules
-          for attempt in 1 2 3; do
-            if npm ci --no-fund --no-audit; then
-              if node -e "require('typescript'); require('@types/vscode'); require('@types/node')"; then
-                exit 0
-              fi
-            fi
-            echo "npm ci incomplete (attempt ${attempt}/3), retrying..."
-            rm -rf node_modules
-            sleep 5
-          done
-          echo "::error::Failed to install dependencies after 3 attempts"
-          exit 1
-
-      - run: npm run compile
+          npm install --no-fund --no-audit
+          node -e "require('typescript'); require('@types/vscode'); require('@types/node')"
+          npm run compile
 
       - run: npm test
 
@@ -106,8 +95,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: npm
+          node-version: '24'
 
       - name: Bump package.json if behind release
         id: bump

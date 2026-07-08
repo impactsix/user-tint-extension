@@ -4,6 +4,12 @@ All notable changes to this project are documented here.
 
 The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.6] - 2026-07-08
+
+### Fixed
+
+- CI and release workflows: use Node 24 and `npm install` instead of `npm ci` (npm was failing on GitHub Actions runners).
+
 ## [1.0.5] - 2026-07-08
 
 ### Fixed
