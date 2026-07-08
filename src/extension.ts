@@ -12,10 +12,20 @@ import {
   type WorkspaceColorsConfig,
   type WorkspaceIdentity,
 } from './resolveWorkspaceTheme';
+import { pickAndConfirmTitleBarColor } from './pickTitleBarColor';
 
 const SNAPSHOT_KEY = 'userTint.managedColorSnapshot';
 const WRITE_BLOCK_NOTICE_KEY = 'userTint.writeBlockedNoticeShown';
+const TITLE_BAR_STYLE_NOTICE_KEY = 'userTint.titleBarStyleNoticeShown';
 const CFG = 'userTint';
+
+export type ApplyNotify = 'always' | 'once' | 'never';
+
+export type ApplyResult =
+  | { status: 'applied'; background: string }
+  | { status: 'no-folder' }
+  | { status: 'write-blocked'; mode: 'workspaceFileOnly' | 'never' }
+  | { status: 'no-rule' };
 
 function buildIdentity(): WorkspaceIdentity {
   const wf = vscode.workspace.workspaceFile;
@@ -51,16 +61,108 @@ function readWorkspaceColorsOverride(): WorkspaceColorsConfig {
   return raw && typeof raw === 'object' ? raw : {};
 }
 
-function normalizeHex(input: string): string | undefined {
-  const t = input.trim();
-  const m = /^#?([0-9a-f]{6})$/i.exec(t);
-  if (!m) {
-    return undefined;
+async function notifyApplyResult(
+  context: vscode.ExtensionContext,
+  result: ApplyResult,
+  notify: ApplyNotify,
+): Promise<void> {
+  if (notify === 'never') {
+    return;
   }
-  return `#${m[1].toLowerCase()}`;
+
+  if (result.status === 'applied') {
+    if (notify === 'always') {
+      vscode.window.showInformationMessage(
+        `User Tint: title bar set to ${result.background}`,
+      );
+    }
+    return;
+  }
+
+  if (result.status === 'no-rule') {
+    if (notify === 'always') {
+      vscode.window.showWarningMessage(
+        'User Tint: no matching rule for this workspace. Run "Set color for this workspace…" or enable hash fallback.',
+      );
+    }
+    return;
+  }
+
+  if (result.status === 'no-folder') {
+    return;
+  }
+
+  if (result.status === 'write-blocked') {
+    if (
+      notify === 'once' &&
+      context.workspaceState.get<boolean>(WRITE_BLOCK_NOTICE_KEY, false)
+    ) {
+      return;
+    }
+
+    if (notify === 'once') {
+      await context.workspaceState.update(WRITE_BLOCK_NOTICE_KEY, true);
+    }
+
+    const modeLabel =
+      result.mode === 'workspaceFileOnly' ? 'Workspace File Only' : 'Never';
+    const choice = await vscode.window.showWarningMessage(
+      `User Tint: your rules are saved, but the title bar was not updated. Workspace Write Mode is "${modeLabel}" and this window is a folder (not a .code-workspace file).`,
+      'Use workspace mode',
+      'Dismiss',
+    );
+
+    if (choice === 'Use workspace mode') {
+      const cfg = vscode.workspace.getConfiguration(CFG);
+      await cfg.update(
+        'workspaceWriteMode',
+        'workspace',
+        vscode.ConfigurationTarget.Global,
+      );
+      await context.workspaceState.update(WRITE_BLOCK_NOTICE_KEY, false);
+      await applyUserTint(context, { notify: 'always' });
+    }
+  }
 }
 
 type Snapshot = Partial<Record<ManagedWorkbenchKey, string | undefined>>;
+
+async function warnIfTitleBarStyleBlocksTint(
+  context: vscode.ExtensionContext,
+): Promise<void> {
+  const windowCfg = vscode.workspace.getConfiguration('window');
+  const inspected = windowCfg.inspect<string>('titleBarStyle');
+  const effective =
+    inspected?.workspaceValue ??
+    inspected?.globalValue ??
+    inspected?.defaultValue ??
+    'custom';
+
+  if (effective === 'custom') {
+    return;
+  }
+
+  if (context.globalState.get<boolean>(TITLE_BAR_STYLE_NOTICE_KEY, false)) {
+    return;
+  }
+
+  await context.globalState.update(TITLE_BAR_STYLE_NOTICE_KEY, true);
+
+  const choice = await vscode.window.showWarningMessage(
+    'User Tint: title bar colors only show when "window.titleBarStyle" is "custom" (macOS/Cursor often default to native). Enable custom title bar now?',
+    'Enable',
+    'Not now',
+  );
+
+  if (choice === 'Enable') {
+    await windowCfg.update(
+      'titleBarStyle',
+      'custom',
+      vscode.ConfigurationTarget.Global,
+    );
+    await context.globalState.update(TITLE_BAR_STYLE_NOTICE_KEY, false);
+  }
+}
 
 async function ensureSnapshot(
   context: vscode.ExtensionContext,
@@ -117,10 +219,12 @@ function stripManagedKeys(
 
 export async function applyUserTint(
   context: vscode.ExtensionContext,
-): Promise<void> {
+  options?: { notify?: ApplyNotify },
+): Promise<ApplyResult> {
+  const notify = options?.notify ?? 'once';
   const folders = vscode.workspace.workspaceFolders;
   if (!folders?.length) {
-    return;
+    return { status: 'no-folder' };
   }
 
   const identity = buildIdentity();
@@ -130,25 +234,27 @@ export async function applyUserTint(
     user.workspaceWriteMode !== 'workspace' &&
     !vscode.workspace.workspaceFile
   ) {
-    if (!context.workspaceState.get<boolean>(WRITE_BLOCK_NOTICE_KEY, false)) {
-      await context.workspaceState.update(WRITE_BLOCK_NOTICE_KEY, true);
-      const modeLabel =
+    const result: ApplyResult = {
+      status: 'write-blocked',
+      mode:
         user.workspaceWriteMode === 'workspaceFileOnly'
-          ? 'Workspace File Only'
-          : 'Never';
-      vscode.window.showWarningMessage(
-        `User Tint: not applying because this window is a folder workspace and "Workspace Write Mode" is set to "${modeLabel}". Open a user-local .code-workspace file (outside the repo) that points at this folder to keep writes out of .vscode/settings.json.`,
-      );
-    }
-    return;
+          ? 'workspaceFileOnly'
+          : 'never',
+    };
+    await notifyApplyResult(context, result, notify);
+    return result;
   }
 
   const workspaceOverride = readWorkspaceColorsOverride();
   const resolved = resolveWorkspaceTheme(identity, user, workspaceOverride);
 
   if (Object.keys(resolved).length === 0) {
-    return;
+    const result: ApplyResult = { status: 'no-rule' };
+    await notifyApplyResult(context, result, notify);
+    return result;
   }
+
+  await warnIfTitleBarStyleBlocksTint(context);
 
   const workbench = vscode.workspace.getConfiguration('workbench');
   const current =
@@ -162,6 +268,14 @@ export async function applyUserTint(
     merged,
     vscode.ConfigurationTarget.Workspace,
   );
+
+  const background =
+    typeof resolved['titleBar.activeBackground'] === 'string'
+      ? resolved['titleBar.activeBackground']
+      : '#000000';
+  const result: ApplyResult = { status: 'applied', background };
+  await notifyApplyResult(context, result, notify);
+  return result;
 }
 
 export async function resetUserTint(
@@ -232,21 +346,7 @@ async function setColorForWorkspace(): Promise<void> {
     return;
   }
 
-  const hexInput = await vscode.window.showInputBox({
-    title: 'Title bar color (hex)',
-    prompt: 'e.g. #1e3a5f',
-    value: '#2d6cdf',
-    validateInput: (v) => {
-      if (!normalizeHex(v)) {
-        return 'Use a 6-digit hex color, with or without #';
-      }
-      return undefined;
-    },
-  });
-  if (!hexInput) {
-    return;
-  }
-  const bg = normalizeHex(hexInput);
+  const bg = await pickAndConfirmTitleBarColor();
   if (!bg) {
     return;
   }
@@ -264,14 +364,14 @@ async function setColorForWorkspace(): Promise<void> {
 
   await cfg.update('rules', nextRules, vscode.ConfigurationTarget.Global);
   vscode.window.showInformationMessage(
-    `User Tint: saved rule (${matchKind.match}: ${pattern}). Run "User Tint: Apply theme" if auto-apply is off.`,
+    `User Tint: saved rule (${matchKind.match}: ${pattern}, ${bg}).`,
   );
 }
 
 export function activate(context: vscode.ExtensionContext): void {
-  const runApply = async () => {
+  const runApply = async (notify: ApplyNotify = 'always') => {
     try {
-      await applyUserTint(context);
+      await applyUserTint(context, { notify });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       vscode.window.showErrorMessage(`User Tint: ${msg}`);
@@ -279,7 +379,7 @@ export function activate(context: vscode.ExtensionContext): void {
   };
 
   context.subscriptions.push(
-    vscode.commands.registerCommand('userTint.apply', runApply),
+    vscode.commands.registerCommand('userTint.apply', () => runApply('always')),
     vscode.commands.registerCommand('userTint.reset', async () => {
       try {
         await resetUserTint(context);
@@ -297,7 +397,7 @@ export function activate(context: vscode.ExtensionContext): void {
             .getConfiguration(CFG)
             .get<boolean>('autoApply', true);
           if (auto) {
-            await applyUserTint(context);
+            await applyUserTint(context, { notify: 'always' });
           }
         } catch (e) {
           const msg = e instanceof Error ? e.message : String(e);
@@ -310,7 +410,7 @@ export function activate(context: vscode.ExtensionContext): void {
         .getConfiguration(CFG)
         .get<boolean>('autoApply', true);
       if (auto) {
-        void runApply();
+        void runApply('once');
       }
     }),
     vscode.workspace.onDidChangeConfiguration((e) => {
@@ -321,7 +421,7 @@ export function activate(context: vscode.ExtensionContext): void {
         .getConfiguration(CFG)
         .get<boolean>('autoApply', true);
       if (auto) {
-        void runApply();
+        void runApply('once');
       }
     }),
   );
@@ -330,7 +430,7 @@ export function activate(context: vscode.ExtensionContext): void {
     .getConfiguration(CFG)
     .get<boolean>('autoApply', true);
   if (auto) {
-    void runApply();
+    void runApply('once');
   }
 }
 

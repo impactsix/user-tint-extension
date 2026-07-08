@@ -45,6 +45,8 @@ export interface WorkspaceIdentity {
 export interface ResolvedWorkbenchColors {
   'titleBar.activeBackground'?: string;
   'titleBar.activeForeground'?: string;
+  'titleBar.inactiveBackground'?: string;
+  'titleBar.inactiveForeground'?: string;
   'activityBar.background'?: string;
   'activityBar.foreground'?: string;
 }
@@ -52,6 +54,8 @@ export interface ResolvedWorkbenchColors {
 export const MANAGED_WORKBENCH_KEYS = [
   'titleBar.activeBackground',
   'titleBar.activeForeground',
+  'titleBar.inactiveBackground',
+  'titleBar.inactiveForeground',
   'activityBar.background',
   'activityBar.foreground',
 ] as const;
@@ -137,6 +141,18 @@ export function contrastingForeground(backgroundHex: string): string {
   return lum > 0.55 ? '#1e1e1e' : '#f3f3f3';
 }
 
+function applyTitleBarColors(
+  out: ResolvedWorkbenchColors,
+  background: string,
+  foreground?: string,
+): void {
+  const fg = foreground ?? contrastingForeground(background);
+  out['titleBar.activeBackground'] = background;
+  out['titleBar.activeForeground'] = fg;
+  out['titleBar.inactiveBackground'] = background;
+  out['titleBar.inactiveForeground'] = fg;
+}
+
 function ruleMatches(
   rule: TintRule,
   identity: WorkspaceIdentity,
@@ -187,12 +203,14 @@ function mapRuleColorsToWorkbench(
 ): ResolvedWorkbenchColors {
   const out: ResolvedWorkbenchColors = {};
   if (colors.titleBarActiveBackground) {
-    out['titleBar.activeBackground'] = colors.titleBarActiveBackground;
-    out['titleBar.activeForeground'] =
-      colors.titleBarActiveForeground ??
-      contrastingForeground(colors.titleBarActiveBackground);
+    applyTitleBarColors(
+      out,
+      colors.titleBarActiveBackground,
+      colors.titleBarActiveForeground,
+    );
   } else if (colors.titleBarActiveForeground) {
     out['titleBar.activeForeground'] = colors.titleBarActiveForeground;
+    out['titleBar.inactiveForeground'] = colors.titleBarActiveForeground;
   }
   if (applyActivityBar) {
     if (colors.activityBarBackground) {
@@ -219,10 +237,8 @@ export function hashFallbackColors(
   const hue = hashString(key) % 360;
   const bg = hslToHex(hue, saturation, lightness);
   const fg = contrastingForeground(bg);
-  const out: ResolvedWorkbenchColors = {
-    'titleBar.activeBackground': bg,
-    'titleBar.activeForeground': fg,
-  };
+  const out: ResolvedWorkbenchColors = {};
+  applyTitleBarColors(out, bg, fg);
   if (applyActivityBar) {
     out['activityBar.background'] = bg;
     out['activityBar.foreground'] = fg;
@@ -236,12 +252,14 @@ function mapWorkspaceOverrideToWorkbench(
 ): ResolvedWorkbenchColors {
   const out: ResolvedWorkbenchColors = {};
   if (w.titleBarActiveBackground) {
-    out['titleBar.activeBackground'] = w.titleBarActiveBackground;
-    out['titleBar.activeForeground'] =
-      w.titleBarActiveForeground ??
-      contrastingForeground(w.titleBarActiveBackground);
+    applyTitleBarColors(
+      out,
+      w.titleBarActiveBackground,
+      w.titleBarActiveForeground,
+    );
   } else if (w.titleBarActiveForeground) {
     out['titleBar.activeForeground'] = w.titleBarActiveForeground;
+    out['titleBar.inactiveForeground'] = w.titleBarActiveForeground;
   }
   if (applyActivityBar) {
     if (w.activityBarBackground) {

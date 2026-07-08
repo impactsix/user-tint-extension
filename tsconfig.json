@@ -10,6 +10,6 @@
     "skipLibCheck": true,
     "sourceMap": true
   },
-  "include": ["src/extension.ts", "src/resolveWorkspaceTheme.ts"],
+  "include": ["src/**/*.ts"],
   "exclude": ["src/**/*.test.ts", "node_modules", "out"]
 }

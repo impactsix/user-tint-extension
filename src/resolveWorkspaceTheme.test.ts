@@ -148,5 +148,26 @@ describe('resolveWorkspaceTheme', () => {
       { titleBarActiveBackground: '#ff00aa' },
     );
     expect(r['titleBar.activeBackground']).toBe('#ff00aa');
+    expect(r['titleBar.inactiveBackground']).toBe('#ff00aa');
+  });
+
+  it('sets inactive title bar to match active', () => {
+    const r = resolveWorkspaceTheme(
+      identity,
+      {
+        ...baseUser,
+        rules: [
+          {
+            match: 'basename',
+            pattern: 'client',
+            colors: { titleBarActiveBackground: '#112233' },
+          },
+        ],
+      },
+      undefined,
+    );
+    expect(r['titleBar.activeBackground']).toBe('#112233');
+    expect(r['titleBar.inactiveBackground']).toBe('#112233');
+    expect(r['titleBar.activeForeground']).toBe(r['titleBar.inactiveForeground']);
   });
 });

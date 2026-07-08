@@ -2,7 +2,7 @@
   "name": "user-tint",
   "displayName": "User Tint",
   "description": "Per-workspace title bar (and optional activity bar) colors from user-owned rules, optional stable hash fallback, and optional workspace overrides. Works in VS Code and Cursor.",
-  "version": "1.0.8",
+  "version": "1.0.13",
   "publisher": "ImpactSix",
   "icon": "icon.png",
   "license": "MIT",
@@ -181,7 +181,8 @@
     "vscode:prepublish": "npm run compile && npm run verify-changelog",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "package": "vsce package --no-dependencies",
+    "package": "vsce package --no-dependencies --out dist/",
+    "package:vsix": "npm run compile && vsce package --no-dependencies --out dist/",
     "verify-changelog": "node scripts/verify-changelog.mjs",
     "test": "vitest run"
   },

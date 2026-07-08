@@ -4,6 +4,58 @@ All notable changes to this project are documented here.
 
 The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.13] - 2026-07-08
+
+### Added
+
+- Flat UI presets with color swatches, live title bar preview, and confirm-before-save flow.
+- `pnpm package:vsix` → `dist/user-tint-<version>.vsix`.
+
+### Fixed
+
+- Set `titleBar.inactiveBackground` / `titleBar.inactiveForeground` so tint stays visible when the window is unfocused.
+- Apply feedback when workspace write mode blocks folder workspaces; one-click **Use workspace mode**.
+
+### Changed
+
+- README: recommended user settings (`window.titleBarStyle`, `userTint.autoApply`, `workspaceWriteMode`), command guide, troubleshooting.
+
+## [1.0.12] - 2026-07-08
+
+### Added
+
+- **Live title bar preview** while arrowing through colors or typing hex (not only on the highlighted row or confirm step). Custom hex input previews as you type too.
+
+## [1.0.11] - 2026-07-08
+
+### Added
+
+- Color swatches (filled squares) beside Flat UI presets and typed hex colors in the picker.
+- **Preview title bar color** confirm step before saving a rule.
+- Clear apply feedback when blocked, including one-click **Use workspace mode**.
+
+### Fixed
+
+- **Apply theme** always explains why the title bar did not change (e.g. `workspaceFileOnly` with a folder workspace).
+
+## [1.0.10] - 2026-07-08
+
+### Changed
+
+- Color picker: **Custom hex…** first; typing a valid hex uses it when no preset matches (including **Use #…** row).
+- On apply, prompt once to set `window.titleBarStyle` to `custom` when title bar colors would be hidden (common on macOS/Cursor).
+
+### Added
+
+- README troubleshooting for title bar not changing and activity bar setting.
+
+## [1.0.9] - 2026-07-08
+
+### Added
+
+- **Flat UI preset palette** in **User Tint: Set color for this workspace…** (18 colors plus **Custom hex…**).
+- README: command guide, preset table, and `pnpm package:vsix` build instructions.
+
 ## [1.0.8] - 2026-07-08
 
 ### Fixed

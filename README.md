@@ -27,7 +27,7 @@ On top of that, I run many folders and workspaces at once: same-looking chrome e
 
 - **User-owned rules** – Path, folder name, or workspace-file matchers; first match wins.
 - **Optional hash fallback** – Stable automatic color when no rule matches.
-- **Quick setup command** – Pick how to match the workspace and enter a hex color.
+- **Quick setup command** – Pick how to match the workspace, choose a **Flat UI** preset or enter a custom hex color.
 - **Optional team colors** – Workspace-level overrides when you explicitly allow them.
 - **Workspace write mode** – Prefer applying only when a `.code-workspace` file is open, or disable workspace writes entirely, so you can keep tint colors out of a repo’s `.vscode/settings.json` (see **User Tint › Workspace Write Mode**).
 - **Reset** – Restore prior title/activity bar colors when possible.
@@ -65,9 +65,37 @@ cursor --install-extension ./user-tint-<version>.vsix
 
 ![Choosing how to match the workspace](media/match-workspace.png)
 
-4. Enter a **title bar** color as hex (foreground is chosen for contrast when you only set a background).
+4. Pick a **Flat UI** preset (color swatch on the left) or type a hex. The **title bar previews live** as you move through the list; confirm on the last step.
 
 ![Entering a title bar color in hex](media/set-hex-color.png)
+
+The title bar updates immediately when **User Tint › Auto Apply** is on (default).
+
+## Recommended user settings
+
+For title bar tints that **show up**, **stay visible when the window is unfocused**, and **re-apply automatically**, add this to your **User** `settings.json`:
+
+```json
+{
+  "window.titleBarStyle": "custom",
+  "userTint.autoApply": true,
+  "userTint.workspaceWriteMode": "workspace",
+  "userTint.rules": []
+}
+```
+
+| Setting | Why |
+| ------- | --- |
+| **`window.titleBarStyle`: `"custom"`** | Required on macOS and many Cursor setups. A **native** title bar ignores `workbench.colorCustomizations`. Reload after changing. |
+| **`userTint.autoApply`: `true`** | Re-applies your rules when you open or switch workspaces (default). |
+| **`userTint.workspaceWriteMode`: `"workspace"`** | Writes tint colors for normal folder workspaces. Use `workspaceFileOnly` only if you open repos via a user-local `.code-workspace` file and want zero `.vscode` writes (see [Keeping writes out of the repo](#keeping-color-writes-out-of-the-repo)). |
+
+User Tint maps each rule color to **four** workbench keys so the tint does not vanish when another app or window is focused:
+
+- `titleBar.activeBackground` / `titleBar.activeForeground`
+- `titleBar.inactiveBackground` / `titleBar.inactiveForeground`
+
+You only set `titleBarActiveBackground` in rules; foreground and inactive variants are filled in automatically.
 
 **Other ways to configure**
 
@@ -89,9 +117,11 @@ To avoid committing tint colors, open the project through a **user-local** `.cod
 
 ```json
 {
+  "window.titleBarStyle": "custom",
   "userTint.autoApply": true,
-  "userTint.hashFallback": true,
+  "userTint.hashFallback": false,
   "userTint.applyActivityBar": false,
+  "userTint.workspaceWriteMode": "workspace",
   "userTint.rules": [
     {
       "match": "basename",
@@ -145,21 +175,78 @@ Open that workspace file in the editor. User Tint can persist `workbench.colorCu
 
 Overrides merge on top of your user rules for that workspace.
 
+## What each command does
+
+| Command | When to use |
+| ------- | ----------- |
+| **Set color for this workspace…** | First-time setup (or change color). Saves a **user rule** and applies the tint. |
+| **Apply theme** | Re-run your rules after editing `userTint.rules` in settings, or when **Auto Apply** is off. |
+| **Reset workspace tint** | Remove applied title/activity bar colors in **this workspace** and restore what you had before. Does not delete your user rules. |
+
+## Flat UI presets
+
+When you run **Set color for this workspace…**, **Custom hex…** is listed first. Type a hex in the picker (e.g. `#3498db`) and press Enter to use it even when no preset matches, or pick from [Flat UI](https://flatuicolors.com/):
+
+| Name | Hex | Name | Hex |
+| ---- | --- | ---- | --- |
+| Turquoise | `#1abc9c` | Green Sea | `#16a085` |
+| Emerald | `#2ecc71` | Nephritis | `#27ae60` |
+| Peter River | `#3498db` | Belize Hole | `#2980b9` |
+| Amethyst | `#9b59b6` | Wisteria | `#8e44ad` |
+| Wet Asphalt | `#34495e` | Midnight Blue | `#2c3e50` |
+| Sun Flower | `#f1c40f` | Orange | `#f39c12` |
+| Carrot | `#e67e22` | Pumpkin | `#d35400` |
+| Alizarin | `#e74c3c` | Pomegranate | `#c0392b` |
+| Concrete | `#95a5a6` | Asbestos | `#7f8c8d` |
+
+Very light Flat UI neutrals (Clouds, Silver) are omitted because they read poorly on title bars.
+
 ## Commands
 
 | Command                                      | Action                                                                 |
 | -------------------------------------------- | ---------------------------------------------------------------------- |
-| **User Tint: Set color for this workspace…** | Choose match type and hex; adds a user rule and applies                |
+| **User Tint: Set color for this workspace…** | Match type, Flat UI preset or custom hex; adds a user rule and applies |
 | **User Tint: Apply theme**                   | Re-resolve rules and write workspace colors                            |
 | **User Tint: Reset workspace tint**          | Remove this extension’s title/activity keys; restore prior when possible |
+
+## Troubleshooting
+
+See [Recommended user settings](#recommended-user-settings) first.
+
+### Title bar color did not change
+
+User Tint sets `workbench.colorCustomizations` for the **title bar** (top window chrome), not the editor tabs or status bar.
+
+**Most common cause:** **User Tint › Workspace Write Mode** is `workspaceFileOnly` (or `never`) but you opened a **folder**, not a `.code-workspace` file. Rules save to user settings, but colors are not written. Run **Apply theme** and choose **Use workspace mode**, or open the project via a user-local `.code-workspace` file.
+
+On **macOS** and some **Cursor** setups, the OS uses a **native** title bar that ignores theme colors. Set this in **User** settings:
+
+```json
+{
+  "window.titleBarStyle": "custom"
+}
+```
+
+Reload the window after changing it. User Tint will offer to enable this the first time it applies a tint.
+
+**Tint disappears when you click another window:** fixed in v1.0.13+ — User Tint now sets both **active** and **inactive** title bar colors. Re-run **Apply theme** after upgrading.
+
+**Activity bar** (left icon strip) only changes when **User Tint › Apply Activity Bar** is enabled.
+
+### Rule saved but no tint
+
+- Confirm a folder or `.code-workspace` is open.
+- Check **User Tint › Workspace Write Mode** if you use `workspaceFileOnly` or `never`.
+- Run **User Tint: Apply theme** if **Auto Apply** is off.
+- Search settings for `@ext:ImpactSix.user-tint` to confirm your rule exists.
 
 ## Development
 
 ```bash
-npm install
-npm run compile   # or npm run watch
-npm test          # Vitest (resolution logic)
-npm run verify-changelog
+pnpm install    # or npm install
+pnpm compile    # or npm run watch
+pnpm test
+pnpm package:vsix   # builds dist/user-tint-<version>.vsix
 ```
 
 **Run the extension:** open this repo in VS Code or Cursor → **Run and Debug** → **Run Extension** (F5).
@@ -185,7 +272,7 @@ npx @vscode/vsce publish --no-dependencies
 
 `vscode:prepublish` runs `verify-changelog`, so packaging also fails if the changelog does not document the current version. CI and the release workflow run the same check.
 
-**Package only (no upload):** `npx @vscode/vsce package --no-dependencies` produces `user-tint-<version>.vsix`.
+**Package only (no upload):** `pnpm package:vsix` (or `npm run package:vsix`) writes `dist/user-tint-<version>.vsix`.
 
 README screenshots live under `media/` so they ship in the VSIX and resolve on the marketplace listing.
 
@@ -200,3 +287,5 @@ Rules and preferences are normal VS Code **user** and **workspace** settings, pl
 ## Upgrading from older local builds
 
 If you previously used a VSIX named `project-chrome`, uninstall it and install **User Tint**. Settings moved from `projectChrome.*` to `userTint.*`; copy rules over manually if needed.
+
+If you upgraded from **before 1.0.13**, run **User Tint: Apply theme** once so **inactive** title bar colors are written (fixes tint disappearing when the window loses focus).
